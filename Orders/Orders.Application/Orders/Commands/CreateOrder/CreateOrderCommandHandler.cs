@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 
 
 using MediatR;
+using Orders.Application.Abstractions.Repositories;
+using Orders.Domain.Entities;
 
 namespace Orders.Application.Orders.Commands.CreateOrder;
 
@@ -28,7 +30,11 @@ public class CreateOrderCommandHandler
         if (request.Items == null || request.Items.Count == 0)
             throw new ArgumentException("Order must contain at least one item");
 
-        var order = new Order(request.CustomerId);
+        var order = new Order(
+            request.OrderId,
+            request.CustomerId,
+            request.CreatedAt,
+            request.TotalAmount);
 
         foreach (var item in request.Items)
         {

@@ -4,5 +4,5 @@ namespace Catalog.Application.Checkout;
 
 public interface ICheckoutService
 {
-	Task CheckoutAsync(CheckoutRequestDto request);
+    Task<Guid> CheckoutAsync(CheckoutRequestDto request);
 }

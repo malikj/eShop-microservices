@@ -8,29 +8,32 @@ namespace Orders.Api.Consumers;
 
 public class OrderRequestedConsumer : IConsumer<OrderRequested>
 {
-	private readonly IMediator _mediator;
+    private readonly IMediator _mediator;
 
-	public OrderRequestedConsumer(IMediator mediator)
-	{
-		_mediator = mediator;
-	}
+    public OrderRequestedConsumer(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
 
-	public async Task Consume(ConsumeContext<OrderRequested> context)
-	{
-		var evt = context.Message;
+    public async Task Consume(ConsumeContext<OrderRequested> context)
+    {
+        var evt = context.Message;
 
-		var command = new CreateOrderCommand
-		{
-			CustomerId = evt.CustomerId,
-			Items = evt.Items.Select(i => new CreateOrderItemDto
-			{
-				ProductId = i.ProductId,
-				ProductName = i.ProductName,
-				UnitPrice = i.UnitPrice,
-				Quantity = i.Quantity
-			}).ToList()
-		};
+        var command = new CreateOrderCommand
+        {
+            OrderId = evt.OrderId,
+            CustomerId = evt.CustomerId,
+            CreatedAt = evt.CreatedAt,
+            TotalAmount = evt.TotalAmount,
+            Items = evt.Items.Select(i => new CreateOrderItemDto
+            {
+                ProductId = i.ProductId,
+                ProductName = i.ProductName,
+                UnitPrice = i.UnitPrice,
+                Quantity = i.Quantity
+            }).ToList()
+        };
 
-		await _mediator.Send(command);
-	}
+        await _mediator.Send(command);
+    }
 }

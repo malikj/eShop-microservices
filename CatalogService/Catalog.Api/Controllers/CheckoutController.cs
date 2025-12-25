@@ -20,11 +20,20 @@ public class CheckoutController : ControllerBase
         _checkoutService = checkoutService;
     }
 
+    //[HttpPost]
+    //public async Task<IActionResult> Checkout(
+    //    [FromBody] CheckoutRequestDto request)
+    //{
+    //    await _checkoutService.CheckoutAsync(request);
+    //    return Accepted(); // async processing
+    //}
+
     [HttpPost]
     public async Task<IActionResult> Checkout(
-        [FromBody] CheckoutRequestDto request)
+    [FromBody] CheckoutRequestDto request)
     {
-        await _checkoutService.CheckoutAsync(request);
-        return Accepted(); // async processing
+        var orderId = await _checkoutService.CheckoutAsync(request);
+        return Accepted(new { orderId });
     }
+
 }

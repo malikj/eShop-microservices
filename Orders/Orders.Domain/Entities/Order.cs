@@ -7,6 +7,12 @@ using System.Threading.Tasks;
 
 namespace Orders.Domain.Entities;
 
+
+
+using Orders.Domain.Enums;
+
+namespace Orders.Domain.Entities;
+
 public class Order
 {
     private readonly List<OrderItem> _items = new();
@@ -16,21 +22,34 @@ public class Order
     public OrderStatus Status { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
-    public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
+    // ✅ Persisted snapshot (NOT computed)
+    public decimal TotalPrice { get; private set; }
 
-    public decimal TotalPrice => _items.Sum(i => i.GetTotal());
+    public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
 
     private Order() { } // EF Core
 
-    public Order(Guid customerId)
+    // ✅ External identity + immutable snapshot
+    public Order(
+        Guid orderId,
+        Guid customerId,
+        DateTime createdAt,
+        decimal totalPrice)
     {
+        if (orderId == Guid.Empty)
+            throw new ArgumentException("OrderId is required");
+
         if (customerId == Guid.Empty)
             throw new ArgumentException("CustomerId is required");
 
-        Id = Guid.NewGuid();
+        if (totalPrice <= 0)
+            throw new ArgumentException("TotalPrice must be greater than zero");
+
+        Id = orderId;
         CustomerId = customerId;
+        CreatedAt = createdAt;
+        TotalPrice = totalPrice;
         Status = OrderStatus.Pending;
-        CreatedAt = DateTime.UtcNow;
     }
 
     public void AddItem(Guid productId, string productName, decimal unitPrice, int quantity)

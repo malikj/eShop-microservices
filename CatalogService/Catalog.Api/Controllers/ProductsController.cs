@@ -26,7 +26,6 @@ public sealed class ProductsController : ControllerBase
     public async Task<IActionResult> Create(CreateProductCommand command)
     {
         var id = await _service.CreateAsync(command);
-        //return CreatedAtAction(nameof(GetAll), new { id }, null);
         return Created($"/api/products/{id}", new { id });
 
     }
