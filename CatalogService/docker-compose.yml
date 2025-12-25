@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "SqlDev@123"
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep sqlservr"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  catalog-api:
+    image: catalog-api
+    container_name: catalog-api
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__CatalogDb: >
+        Server=sqlserver;
+        Database=CatalogDb;
+        User Id=sa;
+        Password=SqlDev@123;
+        TrustServerCertificate=True;
+    ports:
+      - "8081:8080"
+
+volumes:
+  mssql_data:
