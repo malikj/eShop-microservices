@@ -22,14 +22,16 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.CreatedAt)
                .IsRequired();
 
-        // Calculated property
-        builder.Ignore(o => o.TotalPrice);
+        // ✅ FIX: Persisted snapshot value
+        builder.Property(o => o.TotalPrice)
+               .HasPrecision(18, 2)
+               .IsRequired();
 
-        // Tell EF that Items uses a backing field
+        // Backing field for items
         builder.Navigation(o => o.Items)
                .UsePropertyAccessMode(PropertyAccessMode.Field);
 
-        // OWNED collection mapped via navigation (IMPORTANT)
+        // Owned collection
         builder.OwnsMany(o => o.Items, oi =>
         {
             oi.ToTable("OrderItems");
@@ -37,7 +39,6 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             oi.WithOwner()
               .HasForeignKey("OrderId");
 
-            // Shadow key for EF
             oi.Property<Guid>("Id");
             oi.HasKey("Id");
 

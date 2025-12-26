@@ -1,23 +1,23 @@
-using Catalog.Api.Messaging;
-using Microsoft.AspNetCore.Mvc;
+//using Catalog.Api.Messaging;
+//using Microsoft.AspNetCore.Mvc;
 
-namespace Catalog.Api.Controllers;
+//namespace Catalog.Api.Controllers;
 
-[ApiController]
-[Route("api/events-test")]
-public class EventsTestController : ControllerBase
-{
-    private readonly OrderEventPublisher _publisher;
+//[ApiController]
+//[Route("api/events-test")]
+//public class EventsTestController : ControllerBase
+//{
+//    private readonly OrderEventPublisher _publisher;
 
-    public EventsTestController(OrderEventPublisher publisher)
-    {
-        _publisher = publisher;
-    }
+//    public EventsTestController(OrderEventPublisher publisher)
+//    {
+//        _publisher = publisher;
+//    }
 
-    [HttpPost("publish-order")]
-    public async Task<IActionResult> PublishOrder()
-    {
-        await _publisher.PublishOrderRequestedAsync();
-        return Ok("OrderRequested event published");
-    }
-}
+//    [HttpPost("publish-order")]
+//    public async Task<IActionResult> PublishOrder()
+//    {
+//        await _publisher.PublishOrderRequestedAsync();
+//        return Ok("OrderRequested event published");
+//    }
+//}

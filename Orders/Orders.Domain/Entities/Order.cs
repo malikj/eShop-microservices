@@ -7,12 +7,6 @@ using System.Threading.Tasks;
 
 namespace Orders.Domain.Entities;
 
-
-
-using Orders.Domain.Enums;
-
-namespace Orders.Domain.Entities;
-
 public class Order
 {
     private readonly List<OrderItem> _items = new();
@@ -22,14 +16,13 @@ public class Order
     public OrderStatus Status { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
-    // ✅ Persisted snapshot (NOT computed)
     public decimal TotalPrice { get; private set; }
 
     public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
 
     private Order() { } // EF Core
 
-    // ✅ External identity + immutable snapshot
+    // ✅ Snapshot-based constructor (CORRECT)
     public Order(
         Guid orderId,
         Guid customerId,
@@ -52,7 +45,12 @@ public class Order
         Status = OrderStatus.Pending;
     }
 
-    public void AddItem(Guid productId, string productName, decimal unitPrice, int quantity)
+    // ❗ DO NOT touch TotalPrice here
+    public void AddItem(
+        Guid productId,
+        string productName,
+        decimal unitPrice,
+        int quantity)
     {
         if (Status != OrderStatus.Pending)
             throw new InvalidOperationException("Cannot modify order once processed");
@@ -77,4 +75,3 @@ public class Order
         Status = OrderStatus.Cancelled;
     }
 }
-
