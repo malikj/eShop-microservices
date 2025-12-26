@@ -1,32 +1,45 @@
-﻿using MediatR;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Orders.Application.Orders.Commands.CreateOrder;
+﻿using Microsoft.AspNetCore.Mvc;
+using Orders.Application.Abstractions.Repositories;
+
 namespace Orders.Api.Controllers;
 
 [ApiController]
 [Route("api/orders")]
 public class OrdersController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly IOrderReadRepository _readRepository;
 
-    public OrdersController(IMediator mediator)
+    public OrdersController(IOrderReadRepository readRepository)
     {
-        _mediator = mediator;
+        _readRepository = readRepository;
     }
 
-    [HttpPost]
-    public async Task<IActionResult> CreateOrder(CreateOrderCommand command)
+    [HttpGet]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] Guid? customerId)
     {
-        var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetById), new { id = result.OrderId }, result);
+        if (customerId.HasValue)
+        {
+            var orders = await _readRepository
+                .GetByCustomerIdAsync(customerId.Value);
+
+            return Ok(orders);
+        }
+
+        var allOrders = await _readRepository.GetAllAsync();
+        return Ok(allOrders);
     }
 
-    [HttpGet("{id}")]
-    public IActionResult GetById(Guid id)
+    [HttpGet("{orderId:guid}")]
+    public async Task<IActionResult> GetById(Guid orderId)
     {
-        // Stub for now — we’ll implement later
-        return Ok();
+        Console.WriteLine($"[OrdersQueryController] GetById hit: {orderId}");
+
+        var order = await _readRepository.GetByIdAsync(orderId);
+
+        if (order == null)
+            return NotFound();
+
+        return Ok(order);
     }
 }
-

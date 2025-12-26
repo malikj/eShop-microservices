@@ -22,6 +22,9 @@ builder.Services.AddDbContext<OrdersDbContext>(options =>
 // Repositories
 // --------------------
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderReadRepository, OrderReadRepository>();
+
+
 
 // --------------------
 // MediatR (REGISTER ONCE)
@@ -66,11 +69,15 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<OrdersDbContext>();
-    dbContext.Database.Migrate();
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//    var dbContext = scope.ServiceProvider.GetRequiredService<OrdersDbContext>();
+//    dbContext.Database.Migrate();
+//}
+
+Console.WriteLine(
+    builder.Configuration.GetConnectionString("OrdersDb"));
+
 
 // --------------------
 // Middleware

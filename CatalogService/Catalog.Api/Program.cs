@@ -81,11 +81,11 @@ var app = builder.Build();
 // --------------------
 // Apply EF Core migrations (NO SEEDING)
 // --------------------
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
-    dbContext.Database.Migrate();
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//    var dbContext = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
+//    dbContext.Database.Migrate();
+//}
 
 // --------------------
 // Middleware pipeline
