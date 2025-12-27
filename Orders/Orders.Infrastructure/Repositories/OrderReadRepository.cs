@@ -1,9 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Orders.Application.Abstractions.Repositories;
-using Orders.Application.Orders.Queries.Dtos;
 using Orders.Infrastructure.Persistence;
 using Orders.Application.Orders.Queries.Dtos;
-
 
 namespace Orders.Infrastructure.Repositories;
 

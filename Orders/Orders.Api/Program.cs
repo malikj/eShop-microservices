@@ -1,11 +1,16 @@
 using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Orders.Api.Consumers;
 using Orders.Application.Abstractions.Repositories;
 using Orders.Application.Orders.Commands.CreateOrder;
 using Orders.Infrastructure.Persistence;
 using Orders.Infrastructure.Repositories;
+using Orders.Api.Consumers;
+using Orders.Application.Orders.Commands.PayOrder;
+
+using Orders.Application.Abstractions.Messaging;
+using Orders.Infrastructure.Messaging;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +28,8 @@ builder.Services.AddDbContext<OrdersDbContext>(options =>
 // --------------------
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderReadRepository, OrderReadRepository>();
+builder.Services.AddScoped<IEventPublisher, MassTransitEventPublisher>();
+
 
 
 
@@ -34,12 +41,21 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(CreateOrderCommand).Assembly);
 });
 
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(PayOrderCommand).Assembly);
+});
+
+
 // --------------------
 // MassTransit + RabbitMQ
 // --------------------
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<OrderRequestedConsumer>();
+    x.AddConsumer<PaymentSucceededConsumer>();
+    x.AddConsumer<PaymentFailedConsumer>();
+
 
     x.UsingRabbitMq((context, cfg) =>
     {
