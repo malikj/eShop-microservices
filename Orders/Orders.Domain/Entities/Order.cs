@@ -22,7 +22,7 @@ public class Order
 
     private Order() { } // EF Core
 
-    // ✅ Snapshot-based constructor (CORRECT)
+    //  Snapshot-based constructor (CORRECT)
     public Order(
         Guid orderId,
         Guid customerId,
@@ -45,7 +45,7 @@ public class Order
         Status = OrderStatus.Pending;
     }
 
-    // ❗ DO NOT touch TotalPrice here
+    // DO NOT touch TotalPrice here
     public void AddItem(
         Guid productId,
         string productName,
@@ -61,17 +61,27 @@ public class Order
 
     public void MarkAsPaid()
     {
+        if (Status == OrderStatus.Paid)
+            return; // idempotent
+
         if (Status != OrderStatus.Pending)
-            throw new InvalidOperationException("Only pending orders can be paid");
+            return; // ignore invalid event
 
         Status = OrderStatus.Paid;
     }
 
     public void Cancel()
     {
-        if (Status == OrderStatus.Shipped)
-            throw new InvalidOperationException("Shipped orders cannot be cancelled");
+        if (Status == OrderStatus.Cancelled)
+            return; // idempotent
 
-        Status = OrderStatus.Cancelled;
+        if (Status == OrderStatus.Shipped)
+            return; // ignore, cannot cancel shipped
+
+        if (Status == OrderStatus.Paid || Status == OrderStatus.Pending)
+        {
+            Status = OrderStatus.Cancelled;
+        }
     }
+
 }

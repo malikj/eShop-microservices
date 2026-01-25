@@ -1,5 +1,3 @@
-
-
 using MassTransit;
 using Orders.Application.Abstractions.Repositories;
 using Orders.Domain.Enums;
@@ -17,15 +15,35 @@ public class PaymentFailedConsumer : IConsumer<PaymentFailed>
         _repo = repo;
     }
 
+    //public async Task Consume(ConsumeContext<PaymentFailed> context)
+    //{
+    //    var order = await _repo.GetByIdAsync(
+    //        context.Message.OrderId,
+    //        context.CancellationToken)
+    //        ?? throw new Exception("Order not found");
+
+
+
+    //    order.Cancel();
+
+    //    await _repo.UpdateAsync(order, context.CancellationToken);
+    //}
+
     public async Task Consume(ConsumeContext<PaymentFailed> context)
     {
         var order = await _repo.GetByIdAsync(
             context.Message.OrderId,
-            context.CancellationToken)
-            ?? throw new Exception("Order not found");
+            context.CancellationToken);
+
+        if (order is null)
+        {
+            // Log + ignore
+            return;
+        }
 
         order.Cancel();
 
         await _repo.UpdateAsync(order, context.CancellationToken);
     }
+
 }

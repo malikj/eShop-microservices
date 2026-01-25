@@ -1,4 +1,4 @@
-﻿using Orders.Application.Orders.Dtos;
+﻿using Orders.Application.Ordering.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,9 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 using MediatR;
-using Orders.Application.Orders.Dtos;
 
-namespace Orders.Application.Orders.Commands.CreateOrder;
+namespace Orders.Application.Ordering.Commands.CreateOrder;
 
 public class CreateOrderCommand : IRequest<CreateOrderResult>
 {

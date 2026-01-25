@@ -2,6 +2,7 @@ using MassTransit;
 using eShop.Contracts.Events;
 
 namespace Payments.Api.Consumers;
+
 public class OrderPaymentRequestedConsumer
 	: IConsumer<OrderPaymentRequested>
 {
@@ -14,20 +15,26 @@ public class OrderPaymentRequestedConsumer
 
 	public async Task Consume(ConsumeContext<OrderPaymentRequested> context)
 	{
-		var message = context.Message;
+        Console.WriteLine(" ENTERED OrderPaymentRequestedConsumer");
 
-		var success = message.Amount <= 100_000;
+        var message = context.Message;
+
+		var success = message.Amount <= 100_0000;
 
 		if (success)
 		{
-			await _publishEndpoint.Publish(new PaymentSucceeded(
+            Console.WriteLine(" Publishing PaymentSucceeded");
+
+            await _publishEndpoint.Publish(new PaymentSucceeded(
 				message.OrderId,
 				DateTime.UtcNow
 			));
 		}
 		else
 		{
-			await _publishEndpoint.Publish(new PaymentFailed(
+            Console.WriteLine(" Publishing PaymentFailed");
+
+            await _publishEndpoint.Publish(new PaymentFailed(
 				message.OrderId,
 				"Amount exceeds allowed limit"
 			));

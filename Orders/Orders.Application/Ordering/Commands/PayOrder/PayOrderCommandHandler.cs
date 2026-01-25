@@ -4,8 +4,7 @@ using Orders.Application.Abstractions.Repositories;
 using eShop.Contracts.Events;
 using Orders.Domain.Enums;
 
-
-namespace Orders.Application.Orders.Commands.PayOrder;
+namespace Orders.Application.Ordering.Commands.PayOrder;
 
 public class PayOrderCommandHandler
     : IRequestHandler<PayOrderCommand>

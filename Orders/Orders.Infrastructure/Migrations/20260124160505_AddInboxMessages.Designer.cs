@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Orders.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Orders.Infrastructure.Persistence;
 namespace Orders.Infrastructure.Migrations
 {
     [DbContext(typeof(OrdersDbContext))]
-    partial class OrdersDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260124160505_AddInboxMessages")]
+    partial class AddInboxMessages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -55,15 +58,12 @@ namespace Orders.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<Guid?>("CorrelationId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime>("ProcessedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("MessageId", "Consumer");
 
-                    b.ToTable("InboxMessage", (string)null);
+                    b.ToTable("InboxMessage");
                 });
 
             modelBuilder.Entity("Orders.Domain.Entities.Order", b =>

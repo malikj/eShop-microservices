@@ -4,12 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-
 using MediatR;
 using Orders.Application.Abstractions.Repositories;
 using Orders.Domain.Entities;
 
-namespace Orders.Application.Orders.Commands.CreateOrder;
+namespace Orders.Application.Ordering.Commands.CreateOrder;
 
 public class CreateOrderCommandHandler
     : IRequestHandler<CreateOrderCommand, CreateOrderResult>
@@ -28,7 +27,7 @@ public class CreateOrderCommandHandler
         if (request.Items == null || request.Items.Count == 0)
             throw new ArgumentException("Order must contain at least one item");
 
-        var order = new Order(
+        var order = new Orders.Domain.Entities.Order(
             request.OrderId,
             request.CustomerId,
             request.CreatedAt,

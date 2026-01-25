@@ -1,6 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Orders.Application.Orders.Commands.PayOrder;
+using Orders.Application.Ordering.Commands.PayOrder;
 
 
 namespace Orders.Api.Controllers;

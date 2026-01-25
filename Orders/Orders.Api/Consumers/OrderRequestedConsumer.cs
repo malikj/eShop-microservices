@@ -1,8 +1,8 @@
 using MassTransit;
 using MediatR;
 using eShop.Contracts.Events;
-using Orders.Application.Orders.Commands.CreateOrder;
-using Orders.Application.Orders.Dtos;
+using Orders.Application.Ordering.Commands.CreateOrder;
+using Orders.Application.Ordering.Dtos;
 
 namespace Orders.Api.Consumers;
 

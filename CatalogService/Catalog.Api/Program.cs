@@ -67,6 +67,10 @@ builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
+
+builder.Services.AddScoped<IEventPublisher, MassTransitEventPublisher>();
+
+
 builder.Services.AddValidatorsFromAssemblyContaining<CreateCategoryCommandValidator>();
 
 // --------------------

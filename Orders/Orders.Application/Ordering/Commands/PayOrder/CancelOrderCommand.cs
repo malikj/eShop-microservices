@@ -1,8 +1,7 @@
 
-
 using MediatR;
 using System;
 
-namespace Orders.Application.Orders.Commands.PayOrder;
+namespace Orders.Application.Ordering.Commands.PayOrder;
 
 public record CancelOrderCommand(Guid OrderId) : IRequest;

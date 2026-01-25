@@ -1,5 +1,5 @@
 using MediatR;
 
-namespace Orders.Application.Orders.Commands.PayOrder;
+namespace Orders.Application.Ordering.Commands.PayOrder;
 
 public record PayOrderCommand(Guid OrderId) : IRequest;

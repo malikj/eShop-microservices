@@ -2,11 +2,12 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Orders.Domain.Entities;
 
+
 namespace Orders.Infrastructure.Persistence.Configurations;
 
-public class OrderConfiguration : IEntityTypeConfiguration<Order>
+public class OrderConfiguration : IEntityTypeConfiguration<Orders.Domain.Entities.Order>
 {
-    public void Configure(EntityTypeBuilder<Order> builder)
+    public void Configure(EntityTypeBuilder<Orders.Domain.Entities.Order> builder)
     {
         builder.ToTable("Orders");
 
