@@ -3,6 +3,8 @@ using Orders.Application.Abstractions.Messaging;
 using Orders.Application.Abstractions.Repositories;
 using eShop.Contracts.Events;
 using Orders.Domain.Enums;
+using System.Diagnostics;
+
 
 namespace Orders.Application.Ordering.Commands.PayOrder;
 
@@ -24,6 +26,8 @@ public class PayOrderCommandHandler
      PayOrderCommand request,
      CancellationToken cancellationToken)
     {
+        Console.WriteLine($"Handler TraceId: {Activity.Current?.TraceId}");
+
         var order = await _repo.GetByIdAsync(request.OrderId, cancellationToken)
             ?? throw new Exception("Order not found");
 

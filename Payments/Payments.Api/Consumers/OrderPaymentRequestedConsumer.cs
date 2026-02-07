@@ -1,5 +1,7 @@
 using MassTransit;
 using eShop.Contracts.Events;
+using System.Diagnostics;
+
 
 namespace Payments.Api.Consumers;
 
@@ -16,6 +18,11 @@ public class OrderPaymentRequestedConsumer
 	public async Task Consume(ConsumeContext<OrderPaymentRequested> context)
 	{
         Console.WriteLine(" ENTERED OrderPaymentRequestedConsumer");
+        //Console.WriteLine($"Payments TraceId: {System.Diagnostics.Activity.Current?.TraceId}");
+
+        Console.WriteLine($"TraceId: {Activity.Current?.TraceId}");
+        Console.WriteLine($"ParentId: {Activity.Current?.ParentId}");
+
 
         var message = context.Message;
 

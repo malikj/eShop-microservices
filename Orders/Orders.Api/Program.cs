@@ -15,18 +15,28 @@ using Serilog;
 using Orders.Application.Abstractions.Correlation;
 using Orders.Infrastructure.Correlation;
 using Orders.Api.Middleware;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using Serilog.Enrichers.Span;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
 
 // configure Serilog
+
 builder.Host.UseSerilog((context, config) =>
 {
     config
         .ReadFrom.Configuration(context.Configuration)
         .Enrich.FromLogContext()
-        .WriteTo.Console();
+        .Enrich.WithSpan()   // IMPORTANT
+        .WriteTo.Console(outputTemplate:
+            "[{Timestamp:HH:mm:ss} {Level:u3}] " +
+            "TraceId={TraceId} SpanId={SpanId} " +
+            "{Message:lj}{NewLine}{Exception}");
 });
+
 
 
 // --------------------
@@ -51,6 +61,7 @@ builder.Services.AddScoped<IInboxRepository, InboxRepository>();
 
 
 builder.Services.AddScoped<ICorrelationIdAccessor, HttpCorrelationIdAccessor>();
+
 
 
 // --------------------
@@ -98,6 +109,33 @@ builder.Services.AddMassTransit(x =>
         cfg.ConfigureEndpoints(context);
     });
 });
+
+
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracerProviderBuilder =>
+    {
+        tracerProviderBuilder
+            .AddSource("Orders.Messaging")
+            .AddSource("MassTransit")
+             .AddSource("MassTransit.Transport")   // ADD THIS
+            .SetResourceBuilder(
+                ResourceBuilder.CreateDefault()
+                    .AddService("OrdersService"))
+            .SetSampler(new AlwaysOnSampler())
+            .AddAspNetCoreInstrumentation(options =>
+            {
+                options.RecordException = true;
+            })
+            .AddHttpClientInstrumentation()
+            .AddMassTransitInstrumentation()
+            .AddOtlpExporter(options =>
+            {
+                //options.Endpoint = new Uri("http://localhost:4318/v1/traces");
+                options.Endpoint = new Uri("http://host.docker.internal:4318/v1/traces");
+                options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
+            });
+    });
+
 
 // --------------------
 // API
