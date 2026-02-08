@@ -9,16 +9,14 @@ using Orders.Api.Consumers;
 using Orders.Application.Ordering.Commands.PayOrder;
 
 using Orders.Application.Abstractions.Messaging;
-using Orders.Infrastructure.Messaging;
 using Serilog;
-
 using Orders.Application.Abstractions.Correlation;
 using Orders.Infrastructure.Correlation;
 using Orders.Api.Middleware;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog.Enrichers.Span;
-
+using Orders.Infrastructure.Messaging;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -59,6 +57,8 @@ builder.Services.AddScoped<IOrderReadRepository, OrderReadRepository>();
 builder.Services.AddScoped<IEventPublisher, MassTransitEventPublisher>();
 builder.Services.AddScoped<IInboxRepository, InboxRepository>();
 
+
+builder.Services.AddHostedService<OutboxProcessor>();
 
 builder.Services.AddScoped<ICorrelationIdAccessor, HttpCorrelationIdAccessor>();
 
