@@ -22,7 +22,6 @@ using Orders.Infrastructure.Messaging;
 var builder = WebApplication.CreateBuilder(args);
 
 // configure Serilog
-
 builder.Host.UseSerilog((context, config) =>
 {
     config
@@ -117,7 +116,7 @@ builder.Services.AddOpenTelemetry()
         tracerProviderBuilder
             .AddSource("Orders.Messaging")
             .AddSource("MassTransit")
-             .AddSource("MassTransit.Transport")   // ADD THIS
+             .AddSource("MassTransit.Transport")  
             .SetResourceBuilder(
                 ResourceBuilder.CreateDefault()
                     .AddService("OrdersService"))
@@ -130,7 +129,6 @@ builder.Services.AddOpenTelemetry()
             .AddMassTransitInstrumentation()
             .AddOtlpExporter(options =>
             {
-                //options.Endpoint = new Uri("http://localhost:4318/v1/traces");
                 options.Endpoint = new Uri("http://host.docker.internal:4318/v1/traces");
                 options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
             });

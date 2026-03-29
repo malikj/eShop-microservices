@@ -10,7 +10,6 @@ public class MassTransitEventPublisher : IEventPublisher
 {
     private readonly OrdersDbContext _dbContext;
     private readonly ICorrelationIdAccessor _correlationIdAccessor;
-
     private static readonly ActivitySource ActivitySource = new("OrdersService");
 
     public MassTransitEventPublisher(
@@ -25,13 +24,10 @@ public class MassTransitEventPublisher : IEventPublisher
     {
         Console.WriteLine("OUTBOX WRITE STARTED");
 
-        Console.WriteLine($"Publish TraceId BEFORE: {Activity.Current?.TraceId}");
-
         using var activity = ActivitySource.StartActivity("PublishEvent");
 
         Console.WriteLine($"Publish TraceId AFTER: {Activity.Current?.TraceId}");
 
-      
         var outboxMessage = new OutboxMessage
         {
             Id = Guid.NewGuid(),
@@ -43,8 +39,6 @@ public class MassTransitEventPublisher : IEventPublisher
 
         _dbContext.OutboxMessages.Add(outboxMessage);
         await _dbContext.SaveChangesAsync();
-
-        Console.WriteLine("OUTBOX WRITE Completed");
 
     }
 }

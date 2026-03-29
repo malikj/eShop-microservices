@@ -5,7 +5,6 @@ using eShop.Contracts.Events;
 using Orders.Domain.Enums;
 using System.Diagnostics;
 
-
 namespace Orders.Application.Ordering.Commands.PayOrder;
 
 public class PayOrderCommandHandler
