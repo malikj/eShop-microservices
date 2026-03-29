@@ -39,6 +39,10 @@ builder.Services.AddDbContext<CatalogDbContext>(options =>
 // --------------------
 // MassTransit (RabbitMQ)
 // --------------------
+
+var rabbitHost = builder.Configuration["RabbitMQ:Host"];
+Console.WriteLine($"RabbitMQ Host: {rabbitHost}");
+
 builder.Services.AddMassTransit(x =>
 {
     x.UsingRabbitMq((context, cfg) =>
