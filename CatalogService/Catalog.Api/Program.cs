@@ -1,4 +1,4 @@
-using Catalog.Api.Middleware;
+﻿using Catalog.Api.Middleware;
 using Catalog.Application.Categories;
 using Catalog.Application.Products;
 using Catalog.Application.Checkout;
@@ -8,7 +8,6 @@ using Catalog.Infrastructure.Persistence;
 using Catalog.Infrastructure.Repositories;
 using Catalog.Infrastructure.Messaging;
 using FluentValidation;
-using MassTransit;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,42 +22,22 @@ builder.Services.AddSwaggerGen();
 // --------------------
 // Database
 // --------------------
+//builder.Services.AddDbContext<CatalogDbContext>(options =>
+//{
+//    options.UseSqlServer(
+//        builder.Configuration.GetConnectionString("CatalogDb"),
+//        sqlOptions =>
+//        {
+//            sqlOptions.EnableRetryOnFailure(
+//                maxRetryCount: 5,
+//                maxRetryDelay: TimeSpan.FromSeconds(10),
+//                errorNumbersToAdd: null);
+//        });
+//});
+
 builder.Services.AddDbContext<CatalogDbContext>(options =>
 {
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("CatalogDb"),
-        sqlOptions =>
-        {
-            sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(10),
-                errorNumbersToAdd: null);
-        });
-});
-
-// --------------------
-// MassTransit (RabbitMQ)
-// --------------------
-
-var rabbitHost = builder.Configuration["RabbitMQ:Host"];
-Console.WriteLine($"RabbitMQ Host: {rabbitHost}");
-
-builder.Services.AddMassTransit(x =>
-{
-    x.UsingRabbitMq((context, cfg) =>
-    {
-        cfg.Host(
-            builder.Configuration["RabbitMQ:Host"],
-            "/",
-            h =>
-            {
-                h.Username(builder.Configuration["RabbitMQ:Username"]);
-                h.Password(builder.Configuration["RabbitMQ:Password"]);
-            });
-
-        // IMPORTANT: do NOT block startup
-        cfg.ConfigureEndpoints(context);
-    });
+    options.UseInMemoryDatabase("CatalogDb");
 });
 
 // --------------------
@@ -71,40 +50,32 @@ builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
-
-builder.Services.AddScoped<IEventPublisher, MassTransitEventPublisher>();
-
-
-builder.Services.AddValidatorsFromAssemblyContaining<CreateCategoryCommandValidator>();
-
 // --------------------
 // Messaging abstraction
 // --------------------
-builder.Services.AddScoped<IEventPublisher, MassTransitEventPublisher>();
+builder.Services.Configure<ServiceBusSettings>(
+    builder.Configuration.GetSection(ServiceBusSettings.SectionName));
+
+builder.Services.AddSingleton<IEventPublisher, AzureServiceBusPublisher>();
+
+// --------------------
+// Validation
+// --------------------
+builder.Services.AddValidatorsFromAssemblyContaining<CreateProductCommandValidator>();
 
 // ====================
+// Build app
 // ====================
 var app = builder.Build();
 
 // --------------------
-// Apply EF Core migrations (NO SEEDING)
+// Middleware pipeline - IMPORTANT ORDER!
 // --------------------
-//using (var scope = app.Services.CreateScope())
-//{
-//    var dbContext = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
-//    dbContext.Database.Migrate();
-//}
+// ✅ Swagger MUST be first (before exception handling)
+app.UseSwagger();
+app.UseSwaggerUI();
 
-// --------------------
-// Middleware pipeline
-// --------------------
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthorization();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.MapControllers();

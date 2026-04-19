@@ -1,4 +1,3 @@
-using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -6,19 +5,24 @@ using Microsoft.Extensions.Logging;
 using Orders.Infrastructure.Persistence;
 using System.Text.Json;
 
+using Orders.Application.Abstractions.Messaging;
+
 namespace Orders.Infrastructure.Messaging;
 
 public class OutboxProcessor : BackgroundService
 {
-	private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IServiceScopeFactory _scopeFactory;
 	private readonly ILogger<OutboxProcessor> _logger;
+	private readonly IEventPublisher _eventPublisher;
 
-	public OutboxProcessor(
+    public OutboxProcessor(
 		IServiceScopeFactory scopeFactory,
-		ILogger<OutboxProcessor> logger)
+		ILogger<OutboxProcessor> logger,
+		IEventPublisher eventPublisher)
 	{
 		_scopeFactory = scopeFactory;
 		_logger = logger;
+		_eventPublisher = eventPublisher;
 	}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -45,7 +49,6 @@ public class OutboxProcessor : BackgroundService
 		using var scope = _scopeFactory.CreateScope();
 
 		var dbContext = scope.ServiceProvider.GetRequiredService<OrdersDbContext>();
-		var publishEndpoint = scope.ServiceProvider.GetRequiredService<IPublishEndpoint>();
 
 		var messages = await dbContext.OutboxMessages
 			.Where(x => x.ProcessedOnUtc == null)
@@ -83,8 +86,9 @@ public class OutboxProcessor : BackgroundService
 					continue;
 				}
 
-				// Publish to RabbitMQ
-				await publishEndpoint.Publish(@event, cancellationToken);
+
+				// Use the IEventPublisher abstraction
+				await _eventPublisher.PublishAsync((object)@event);
 
 				// Mark processed
 				message.ProcessedOnUtc = DateTime.UtcNow;

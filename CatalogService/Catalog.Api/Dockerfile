@@ -23,7 +23,7 @@ RUN dotnet publish -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-ENV ASPNETCORE_ENVIRONMENT=Docker
+ENV ASPNETCORE_ENVIRONMENT=Production
 
 EXPOSE 8080
 

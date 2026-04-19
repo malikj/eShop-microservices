@@ -18,6 +18,14 @@ public sealed class ExceptionHandlingMiddleware
 
     public async Task Invoke(HttpContext context)
     {
+        // Skip exception handling for Swagger paths
+        if (context.Request.Path.StartsWithSegments("/swagger") || 
+            context.Request.Path.StartsWithSegments("/api/swagger"))
+        {
+            await _next(context);
+            return;
+        }
+
         try
         {
             await _next(context);

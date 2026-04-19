@@ -1,11 +1,8 @@
-using MassTransit;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Orders.Application.Abstractions.Repositories;
 using Orders.Application.Ordering.Commands.CreateOrder;
 using Orders.Infrastructure.Persistence;
 using Orders.Infrastructure.Repositories;
-using Orders.Api.Consumers;
 using Orders.Application.Ordering.Commands.PayOrder;
 
 using Orders.Application.Abstractions.Messaging;
@@ -17,6 +14,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog.Enrichers.Span;
 using Orders.Infrastructure.Messaging;
+using Orders.Infrastructure.Messaging.Consumers;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,12 +37,17 @@ builder.Host.UseSerilog((context, config) =>
 // --------------------
 // Database
 // --------------------
+//builder.Services.AddDbContext<OrdersDbContext>(options =>
+//{
+//    options.UseSqlServer(
+//        builder.Configuration.GetConnectionString("OrdersDb"));
+//});
+
+// Inmem db
 builder.Services.AddDbContext<OrdersDbContext>(options =>
 {
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("OrdersDb"));
+    options.UseInMemoryDatabase("OrdersDb");
 });
-
 
 builder.Services.AddHttpContextAccessor();
 
@@ -53,13 +56,28 @@ builder.Services.AddHttpContextAccessor();
 // --------------------
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderReadRepository, OrderReadRepository>();
-builder.Services.AddScoped<IEventPublisher, MassTransitEventPublisher>();
+// Register AzureServiceBusPublisher as IEventPublisher
+builder.Services.AddScoped<IEventPublisher, AzureServiceBusPublisher>();
 builder.Services.AddScoped<IInboxRepository, InboxRepository>();
 
 
-builder.Services.AddHostedService<OutboxProcessor>();
+
+
+
+// Register OutboxPublisher as a hosted service (if still needed)
+//builder.Services.AddHostedService<OutboxPublisher>();
+
+
+// Register the Azure Service Bus consumer background service
+builder.Services.AddHostedService<AzureServiceBusConsumer>();
+
 
 builder.Services.AddScoped<ICorrelationIdAccessor, HttpCorrelationIdAccessor>();
+
+
+// Bind ServiceBusSettings from configuration
+builder.Services.Configure<Orders.Infrastructure.Messaging.ServiceBusSettings>(
+    builder.Configuration.GetSection(Orders.Infrastructure.Messaging.ServiceBusSettings.SectionName));
 
 
 
@@ -74,49 +92,11 @@ builder.Services.AddMediatR(cfg =>
 });
 
 
-
-
-builder.Services.AddMassTransit(x =>
-{
-    x.AddConsumer<OrderRequestedConsumer>();
-    x.AddConsumer<PaymentSucceededConsumer>();
-    x.AddConsumer<PaymentFailedConsumer>();
-
-
-    x.UsingRabbitMq((context, cfg) =>
-    {
-        cfg.Host("rabbitmq", "/", h =>
-        {
-            h.Username("guest");
-            h.Password("guest");
-        });
-
-        //  GLOBAL retry policy (applies to all consumers)
-        cfg.UseMessageRetry(r =>
-        {
-            //  Do NOT retry domain/business exceptions
-            r.Ignore<InvalidOperationException>();
-            r.Ignore<ArgumentException>();
-            r.Ignore<ArgumentNullException>();
-
-            //  Retry only transient failures
-            r.Incremental(
-                retryLimit: 5,
-                initialInterval: TimeSpan.FromSeconds(1),
-                intervalIncrement: TimeSpan.FromSeconds(2));
-        });
-        cfg.ConfigureEndpoints(context);
-    });
-});
-
-
 builder.Services.AddOpenTelemetry()
     .WithTracing(tracerProviderBuilder =>
     {
         tracerProviderBuilder
             .AddSource("Orders.Messaging")
-            .AddSource("MassTransit")
-             .AddSource("MassTransit.Transport")  
             .SetResourceBuilder(
                 ResourceBuilder.CreateDefault()
                     .AddService("OrdersService"))
@@ -126,7 +106,7 @@ builder.Services.AddOpenTelemetry()
                 options.RecordException = true;
             })
             .AddHttpClientInstrumentation()
-            .AddMassTransitInstrumentation()
+            // .AddMassTransitInstrumentation() // Removed with MassTransit
             .AddOtlpExporter(options =>
             {
                 options.Endpoint = new Uri("http://host.docker.internal:4318/v1/traces");
@@ -142,6 +122,11 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Register consumers for DI
+builder.Services.AddScoped<OrderRequestedConsumer>();
+builder.Services.AddScoped<PaymentSucceededConsumer>();
+builder.Services.AddScoped<PaymentFailedConsumer>();
+
 
 var app = builder.Build();
 
@@ -152,11 +137,14 @@ Console.WriteLine(
 // --------------------
 // Middleware
 // --------------------
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI();
+//}
+
+app.UseSwagger();
+app.UseSwaggerUI();
 // 2 Register Middleware
 app.UseMiddleware<CorrelationIdMiddleware>();
 

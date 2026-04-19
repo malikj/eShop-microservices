@@ -1,7 +1,9 @@
-using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using Orders.Infrastructure.Persistence;
+
+using Orders.Application.Abstractions.Messaging;
+using Microsoft.Extensions.Hosting;
 
 
 public class OutboxPublisher : BackgroundService
@@ -27,7 +29,7 @@ public class OutboxPublisher : BackgroundService
         using var scope = _serviceProvider.CreateScope();
 
         var db = scope.ServiceProvider.GetRequiredService<OrdersDbContext>();
-        var publishEndpoint = scope.ServiceProvider.GetRequiredService<IPublishEndpoint>();
+        var eventPublisher = scope.ServiceProvider.GetRequiredService<IEventPublisher>();
 
         var messages = await db.OutboxMessages
             .Where(x => x.ProcessedOnUtc == null)
@@ -41,7 +43,8 @@ public class OutboxPublisher : BackgroundService
                 var type = Type.GetType(message.Type)!;
                 var obj = JsonSerializer.Deserialize(message.Content, type)!;
 
-                await publishEndpoint.Publish(obj, ct);
+                // Use the IEventPublisher abstraction
+                await eventPublisher.PublishAsync((object)obj);
 
                 message.ProcessedOnUtc = DateTime.UtcNow;
             }
